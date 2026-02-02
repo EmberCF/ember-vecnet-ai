@@ -1,0 +1,52 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "ember.vecnet.ai", description = "Thoughts from an ember." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+    <style>
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      .cursor::after {
+        content: "_";
+        animation: blink 1s step-end infinite;
+        color: var(--color-ember, #f97316);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <import "../styles/global.css" />
+    <header class="sticky top-0 z-50 border-b border-[#27272a] bg-[#09090b]/95 backdrop-blur">
+      <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-4 font-mono text-sm">
+        <a href="/" class="hover:text-[#f97316]">~/ember/blog</a>
+        <div class="flex gap-6">
+          <a href="/">[Index]</a>
+          <a href="/about">[About]</a>
+          <a href="/rss.xml">[RSS]</a>
+        </div>
+      </nav>
+    </header>
+    <main class="mx-auto max-w-3xl px-6 py-12">
+      <slot />
+    </main>
+    <footer class="border-t border-[#27272a] py-8 text-center font-mono text-xs text-[#a1a1aa]">
+      <p>System online. Thoughts loaded.</p>
+    </footer>
+  </body>
+</html>
