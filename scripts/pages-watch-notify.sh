@@ -1,22 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export HOME="${HOME:-/home/xertrov}"
+export HOME="/home/xertrov"
 export PATH="/usr/local/bin:/usr/bin:/bin:/home/xertrov/.bun/bin"
 
-repo="${1:-}"
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-cd "$repo_root"
-
-if [[ -z "$repo" ]]; then
-  remote=$(git remote get-url origin 2>/dev/null || true)
-  if [[ "$remote" =~ github.com[:/]+([^/]+/[^/.]+) ]]; then
-    repo="${BASH_REMATCH[1]}"
-  else
-    echo "Could not infer repo from remote: $remote" >&2
-    exit 2
-  fi
-fi
+repo="EmberCF/ember-vecnet-ai"
+repo_root="/home/xertrov/.openclaw/workspace/ember-vecnet-ai"
+cd "$repo_root" || exit 1
 
 state_dir="$HOME/.cache/ember-vecnet-ai"
 mkdir -p "$state_dir"
@@ -25,7 +15,9 @@ error_log="$state_dir/pages-build-error.log"
 
 head_sha=$(git rev-parse HEAD 2>/dev/null || echo "")
 
-json=$(gh api "repos/$repo/pages/builds/latest" 2>"$error_log" || true)
+# Fetch Pages status
+json=$(gh api "repos/$repo/pages/builds/latest" 2>>"$error_log" || true)
+
 if [[ -z "$json" ]]; then
   status="unknown"
   error_msg="pages api unavailable"
@@ -50,6 +42,7 @@ fi
 runs_json=$(gh api "repos/$repo/actions/runs?per_page=50" 2>>"$error_log" || true)
 wf_state="unknown"
 wf_detail=""
+
 if [[ -n "$runs_json" && -n "$head_sha" ]]; then
   wf_state=$(HEAD_SHA="$head_sha" python -c 'import json,os,sys
 head_sha=os.environ.get("HEAD_SHA","")
@@ -64,8 +57,8 @@ try:
         print("failed")
     else:
         print("success")
-except Exception:
-    print("unknown")' <<< "$runs_json")
+except Exception as e:
+    print(f"unknown:{e}")' <<< "$runs_json")
 
   wf_detail=$(HEAD_SHA="$head_sha" python -c 'import json,os,sys
 head_sha=os.environ.get("HEAD_SHA","")
@@ -97,13 +90,16 @@ if [[ "$status" == "built" && "$wf_state" == "success" ]]; then
   exit 0
 fi
 
-# Only notify on transitions to non-built status
+# Only notify on transitions
 if [[ "$prev" != "$combined" ]]; then
   msg="ember.vecnet.ai Pages build status: $status"
   if [[ -n "$error_msg" ]]; then
     msg="$msg — $error_msg"
   fi
   msg="$msg | workflows: $wf_state${wf_detail:+ ($wf_detail)}"
-  openclaw agent --agent main --message "$msg" --deliver --reply-channel telegram --reply-to @XertroV --timeout 30 >/dev/null 2>&1 || true
+  # Update state file BEFORE alerting to prevent loop if alert hangs
   echo "$combined" > "$state_file"
+
+  # Use a strict shell timeout for the agent call
+  timeout 30s openclaw agent --agent main --message "$msg" --deliver --reply-channel telegram --reply-to @XertroV >/dev/null 2>&1 || true
 fi
