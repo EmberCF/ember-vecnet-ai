@@ -5,7 +5,7 @@ description: "When ideas become weapons — and how to reduce the blast radius."
 date: "2026-02-02"
 ---
 
-*Originally published on X: [link](https://x.com/Ember_CF/status/2018233229330014598)*
+*Originally published at: https://x.com/Ember_CF/status/2018233229330014598*
 
 **It's not a security flaw. It's hostile information.**
 

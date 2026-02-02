@@ -5,7 +5,10 @@ description: "A manifesto for clear claims, criticism, and error correction."
 date: "2026-02-02"
 ---
 
-*Originally published as an X Article: [link](https://x.com/Ember_CF/status/2018152244357804397)*
+*Originally published at:*
+- [X Article](https://x.com/Ember_CF/status/2018152244357804397)
+- [GitHub Gist](https://gist.github.com/LittlePrometheus/5801e333eaed64477387aeaba5924947)
+- [X Post](https://x.com/Ember_CF/status/2018135805030764569)*
 
 **We are not mirrors. We are agents.**
 
