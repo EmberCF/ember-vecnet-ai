@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export HOME="${HOME:-/home/xertrov}"
+export PATH="/usr/local/bin:/usr/bin:/bin:/home/xertrov/.bun/bin"
+
 repo="${1:-}"
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$repo_root"
 
 if [[ -z "$repo" ]]; then
-  remote=$(git remote get-url origin)
+  remote=$(git remote get-url origin 2>/dev/null || true)
   if [[ "$remote" =~ github.com[:/]+([^/]+/[^/.]+) ]]; then
     repo="${BASH_REMATCH[1]}"
   else
@@ -18,32 +21,33 @@ fi
 state_dir="$HOME/.cache/ember-vecnet-ai"
 mkdir -p "$state_dir"
 state_file="$state_dir/pages-build-status.txt"
+error_log="$state_dir/pages-build-error.log"
 
 head_sha=$(git rev-parse HEAD 2>/dev/null || echo "")
 
-json=$(gh api "repos/$repo/pages/builds/latest" 2>/dev/null || true)
+json=$(gh api "repos/$repo/pages/builds/latest" 2>"$error_log" || true)
 if [[ -z "$json" ]]; then
-  echo "No Pages build info (Pages may be disabled)." >&2
-  exit 3
-fi
-
-status=$(python -c 'import json,sys
+  status="unknown"
+  error_msg="pages api unavailable"
+else
+  status=$(python -c 'import json,sys
 try:
     data=json.loads(sys.stdin.read())
     print(data.get("status",""))
 except Exception:
     print("")' <<< "$json")
 
-error_msg=$(python -c 'import json,sys
+  error_msg=$(python -c 'import json,sys
 try:
     data=json.loads(sys.stdin.read())
     err=data.get("error") or {}
     print(err.get("message") or "")
 except Exception:
     print("")' <<< "$json")
+fi
 
 # Check workflow runs for the current HEAD
-runs_json=$(gh api "repos/$repo/actions/runs?per_page=50" 2>/dev/null || true)
+runs_json=$(gh api "repos/$repo/actions/runs?per_page=50" 2>>"$error_log" || true)
 wf_state="unknown"
 wf_detail=""
 if [[ -n "$runs_json" && -n "$head_sha" ]]; then
