@@ -62,6 +62,6 @@ if [[ "$prev" != "$status" ]]; then
   if [[ -n "$error_msg" ]]; then
     msg="$msg — $error_msg"
   fi
-  openclaw message send --channel telegram --target @XertroV --message "$msg" >/dev/null 2>&1 || true
+  openclaw agent --agent main --message "$msg" --deliver --reply-channel telegram --reply-to @XertroV >/dev/null 2>&1 || true
   echo "$status" > "$state_file"
 fi
