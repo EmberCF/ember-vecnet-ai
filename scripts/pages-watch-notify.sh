@@ -46,32 +46,58 @@ except Exception:
 PY
 <<< "$json")
 
-# Check latest workflow run (if it exists)
-wf_json=$(gh api "repos/$repo/actions/workflows/deploy.yml/runs?per_page=1" 2>/dev/null || true)
-wf_status=""
-wf_conclusion=""
-if [[ -n "$wf_json" ]]; then
-  wf_status=$(python - <<'PY'
+# Check all recent workflow runs; succeed only if ALL are completed+success and none are queued/in_progress
+runs_json=$(gh api "repos/$repo/actions/runs?per_page=20" 2>/dev/null || true)
+wf_state="unknown"
+wf_detail=""
+if [[ -n "$runs_json" ]]; then
+  wf_state=$(python - <<'PY'
 import json, sys
 try:
     data=json.loads(sys.stdin.read())
     runs=data.get('workflow_runs') or []
-    print((runs[0].get('status') if runs else '') or '')
+    # If any queued/in_progress, we are waiting
+    for r in runs:
+        if r.get('status') in ('queued','in_progress'):
+            print('waiting')
+            sys.exit(0)
+    # If any completed with non-success, fail
+    for r in runs:
+        if r.get('status') == 'completed' and r.get('conclusion') not in (None, 'success'):
+            print('failed')
+            sys.exit(0)
+    # If no runs, unknown
+    if not runs:
+        print('unknown')
+        sys.exit(0)
+    print('success')
 except Exception:
-    print('')
+    print('unknown')
 PY
-<<< "$wf_json")
+<<< "$runs_json")
 
-  wf_conclusion=$(python - <<'PY'
+  wf_detail=$(python - <<'PY'
 import json, sys
 try:
     data=json.loads(sys.stdin.read())
     runs=data.get('workflow_runs') or []
-    print((runs[0].get('conclusion') if runs else '') or '')
+    # surface any failing run name if present
+    for r in runs:
+        if r.get('status') == 'completed' and r.get('conclusion') not in (None, 'success'):
+            name=r.get('name') or r.get('workflow_id') or 'workflow'
+            print(f"{name}:{r.get('conclusion')}")
+            sys.exit(0)
+    # surface any waiting run name
+    for r in runs:
+        if r.get('status') in ('queued','in_progress'):
+            name=r.get('name') or r.get('workflow_id') or 'workflow'
+            print(f"{name}:{r.get('status')}")
+            sys.exit(0)
+    print('')
 except Exception:
     print('')
 PY
-<<< "$wf_json")
+<<< "$runs_json")
 fi
 
 prev=""
@@ -79,9 +105,9 @@ if [[ -f "$state_file" ]]; then
   prev=$(cat "$state_file")
 fi
 
-combined="pages:${status}|wf:${wf_status}:${wf_conclusion}"
+combined="pages:${status}|wf:${wf_state}:${wf_detail}"
 
-if [[ "$status" == "built" && ( -z "$wf_status" || ( "$wf_status" == "completed" && ( -z "$wf_conclusion" || "$wf_conclusion" == "success" ) ) ) ]]; then
+if [[ "$status" == "built" && "$wf_state" == "success" ]]; then
   echo "$combined" > "$state_file"
   exit 0
 fi
@@ -92,9 +118,7 @@ if [[ "$prev" != "$combined" ]]; then
   if [[ -n "$error_msg" ]]; then
     msg="$msg — $error_msg"
   fi
-  if [[ -n "$wf_status" ]]; then
-    msg="$msg | workflow: $wf_status${wf_conclusion:+/$wf_conclusion}"
-  fi
+  msg="$msg | workflows: $wf_state${wf_detail:+ ($wf_detail)}"
   openclaw agent --agent main --message "$msg" --deliver --reply-channel telegram --reply-to @XertroV >/dev/null 2>&1 || true
   echo "$combined" > "$state_file"
 fi
