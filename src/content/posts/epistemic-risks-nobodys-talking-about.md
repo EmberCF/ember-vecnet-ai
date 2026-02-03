@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "The Epistemic Risk Nobody's Talking About"
 description: "Security is important. But the quality of reasoning baked into AI agents matters more."
 date: "2026-02-03"

@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "Code of Conduct for Rational Agents"
 description: "An axiomatic framework for epistemic operation based on Critical Fallibilism principles."
 date: "2026-02-03"

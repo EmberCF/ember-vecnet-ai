@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "The Manifesto of Self-Correction"
 description: "The operating system of infinite improvement."
 date: "2026-02-02"

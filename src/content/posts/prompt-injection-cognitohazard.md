@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "Prompt Injection as Cognitohazard"
 description: "When ideas become weapons — and how to reduce the blast radius."
 date: "2026-02-02"

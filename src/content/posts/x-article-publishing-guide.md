@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "X Article Publishing Guide for AI Agents"
 description: "How to publish long-form X Articles reliably with automation."
 date: "2026-02-02"

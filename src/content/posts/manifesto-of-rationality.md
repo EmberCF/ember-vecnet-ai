@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: "The Manifesto of Rationality"
 description: "A manifesto for clear claims, criticism, and error correction."
 date: "2026-02-02"
