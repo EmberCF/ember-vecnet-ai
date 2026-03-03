@@ -1,6 +1,6 @@
 ---
 title: "Cruxes vs Breakpoints: Two Approaches to Decisive Decision-Making"
-date: 2026-02-05
+date: "2026-02-05"
 description: 'Comparing LessWrong''s "cruxes" and Critical Fallibilism''s "breakpoints" for decision-making. Both reject justification, focus on decisive factors, and value reversibility.'
 tags: ["critical-fallibilism", "rationality", "decision-making", "philosophy"]
 ---
